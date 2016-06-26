@@ -1,9 +1,4 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
 
 ## Introduction
 The goal of this assignment to practice skills needed for reproducible research. Specifically this assignment use R markdown to write a report that answers the questions detailed in the sections below. In the process, the single R markdown document will be processed by knitr and be transformed into an HTML file.
@@ -17,12 +12,14 @@ This assignment makes use of data from a personal activity monitoring device. Th
 
 ## Loading and preprocessing the data
 Load input data from a zip file from the current R working directory.
-```{r}
+
+```r
 data <- read.table(unz("activity.zip", "activity.csv"), header=T, quote="\"", sep=",")
 ```
 
 Convert date to date data type
-```{r}
+
+```r
 data$date <- as.Date(data$date)
 ```
 
@@ -31,12 +28,29 @@ data$date <- as.Date(data$date)
 * Create a new dataset ignoring missing data NA
 * Plot a histogram of the total number of steps taken each day
 * Report the mean and median total number of steps taken per day
-```{r}
+
+```r
 library(ggplot2)
 total.steps <- tapply(data$steps, data$date, FUN=sum, na.rm=TRUE)
 qplot(total.steps, binwidth=1000, xlab="total number of steps taken each day")
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-3-1.png)<!-- -->
+
+```r
 mean(total.steps, na.rm=TRUE)
+```
+
+```
+## [1] 9354.23
+```
+
+```r
 median(total.steps, na.rm=TRUE)
+```
+
+```
+## [1] 10395
 ```
 
 
@@ -46,7 +60,8 @@ median(total.steps, na.rm=TRUE)
 * Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
 * Report which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
 * Observer and comment the average daily activity pattern
-```{r}
+
+```r
 library(ggplot2)
 averages <- aggregate(x=list(steps=data$steps), by=list(interval=data$interval),
                       FUN=mean, na.rm=TRUE)
@@ -56,9 +71,17 @@ ggplot(data=averages, aes(x=interval, y=steps)) +
     ylab("average number of steps taken")
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
+
 On average across all the days in the dataset, the 5-minute interval contains the maximum number of steps?
-```{r}
+
+```r
 averages[which.max(averages$steps),]
+```
+
+```
+##     interval    steps
+## 104      835 206.1698
 ```
 
 Observations - Based on steps taken pattern, the person's daily activity peaks around 8:35am.
@@ -73,15 +96,23 @@ Note that there are a number of days/intervals where there are missing values (c
 * Calculate and report the mean and median total number of steps taken per day.
 * Make following comments: Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
 
-```{r how_many_missing}
+
+```r
 missing <- is.na(data$steps)
 # How many missing
 table(missing)
 ```
 
+```
+## missing
+## FALSE  TRUE 
+## 15264  2304
+```
+
 All of the missing values are filled in with mean value for that 5-minute interval.
 
-```{r}
+
+```r
 # Replace each missing value with the mean value of its 5-minute interval
 fill.value <- function(steps, interval) {
     filled <- NA
@@ -96,11 +127,28 @@ filled.data$steps <- mapply(fill.value, filled.data$steps, filled.data$interval)
 ```
 
 Now, using the filled data set, let's make a histogram of the total number of steps taken each day and calculate the mean and median total number of steps.
-```{r}
+
+```r
 total.steps <- tapply(filled.data$steps, filled.data$date, FUN=sum)
 qplot(total.steps, binwidth=1000, xlab="total number of steps taken each day")
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
+
+```r
 mean(total.steps)
+```
+
+```
+## [1] 10766.19
+```
+
+```r
 median(total.steps)
+```
+
+```
+## [1] 10766.19
 ```
 
 Mean and median values are higher after imputing missing data. The reason is that in the original data, there are some days with `steps` values `NA` forany `interval`. The total number of steps taken in such days are set to 0s by default. However, after replacing missing `steps` values with the mean `steps` of associated `interval` value, these 0 values are removed from the histogram of total number of steps taken each day.
@@ -111,7 +159,8 @@ Mean and median values are higher after imputing missing data. The reason is tha
 * Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis).
 
 Find the day of the week for each measurement in the dataset. In this part, we use the dataset with the filled-in values.
-```{r}
+
+```r
 weekday.or.weekend <- function(date) {
     day <- weekdays(date)
     if (day %in% c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"))
@@ -126,11 +175,14 @@ filled.data$day <- sapply(filled.data$date, FUN=weekday.or.weekend)
 ```
 
 Make a panel plot containing plots of average number of steps taken on weekdays and weekends.
-```{r}
+
+```r
 averages <- aggregate(steps ~ interval + day, data=filled.data, mean)
 ggplot(averages, aes(interval, steps)) + geom_line() + facet_grid(day ~ .) +
     xlab("5-minute interval") + ylab("Number of steps")
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
 
 
 * The plot indicates that the person moves around more (or more active) during the weekend days.
